@@ -152,6 +152,7 @@ require (
 	github.com/moby/moby/client v0.1.0 // indirect
 	github.com/moby/sys/capability v0.4.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.4 // indirect
+	sigs.k8s.io/knftables v0.0.18 // indirect
 )
 
 replace github.com/containerd/nerdctl/mod/tigron v0.0.0 => ./mod/tigron
