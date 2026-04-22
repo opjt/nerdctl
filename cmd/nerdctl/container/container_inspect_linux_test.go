@@ -391,10 +391,16 @@ func TestContainerInspectHostConfig(t *testing.T) {
 			"--add-host", "host2:10.0.0.2",
 			"--ipc", "host",
 			"--memory", "512m",
+			"--memory-reservation", "200m",
+			"--memory-swappiness", "60",
+			"--pids-limit", "100",
+			"--ulimit", "nofile=1024:65536",
 			"--read-only",
 			"--shm-size", "256m",
 			"--uts", "host",
+			"--restart", "on-failure:3",
 			"--runtime", "io.containerd.runc.v2",
+			"--annotation", "com.example.key=test-val",
 			testutil.AlpineImage, "sleep", nerdtest.Infinity)
 		nerdtest.EnsureContainerStarted(helpers, data.Identifier())
 	}
@@ -430,6 +436,21 @@ func TestContainerInspectHostConfig(t *testing.T) {
 		assert.Equal(tt, true, inspect.HostConfig.ReadonlyRootfs)
 		assert.Equal(tt, "host", inspect.HostConfig.UTSMode)
 		assert.Equal(tt, int64(268435456), inspect.HostConfig.ShmSize)
+		assert.Equal(tt, int64(209715200), inspect.HostConfig.MemoryReservation)
+		assert.Equal(tt, int64(100), inspect.HostConfig.PidsLimit)
+		assert.Equal(tt, 1, len(inspect.HostConfig.Ulimits))
+		assert.Equal(tt, "nofile", inspect.HostConfig.Ulimits[0].Name)
+		assert.Equal(tt, int64(65536), inspect.HostConfig.Ulimits[0].Hard)
+		assert.Equal(tt, int64(1024), inspect.HostConfig.Ulimits[0].Soft)
+		assert.Equal(tt, "on-failure", inspect.HostConfig.RestartPolicy.Name)
+		assert.Equal(tt, 3, inspect.HostConfig.RestartPolicy.MaximumRetryCount)
+		if !nerdtest.IsDocker() {
+			// The docker CI runner warns "Your kernel does not support memory
+			// swappiness capabilities or the cgroup is not mounted" and returns null.
+			assert.Assert(tt, inspect.HostConfig.MemorySwappiness != nil)
+			assert.Equal(tt, int64(60), *inspect.HostConfig.MemorySwappiness)
+		}
+		assert.Equal(tt, "test-val", inspect.HostConfig.Annotations["com.example.key"])
 	})
 
 	testCase.Run(t)
@@ -509,6 +530,14 @@ func TestContainerInspectHostConfigDefaults(t *testing.T) {
 				assert.Equal(tt, hc.ShmSize, inspect.HostConfig.ShmSize)
 				assert.Equal(tt, hc.Runtime, inspect.HostConfig.Runtime)
 				assert.Equal(tt, 0, len(inspect.HostConfig.Devices))
+				assert.Equal(tt, false, inspect.HostConfig.Privileged)
+				assert.Equal(tt, false, inspect.HostConfig.AutoRemove)
+				assert.Equal(tt, int64(0), inspect.HostConfig.MemoryReservation)
+				assert.Equal(tt, int64(0), inspect.HostConfig.PidsLimit)
+				assert.Equal(tt, 0, len(inspect.HostConfig.CapAdd))
+				assert.Equal(tt, 0, len(inspect.HostConfig.CapDrop))
+				assert.Equal(tt, 0, len(inspect.HostConfig.Ulimits))
+				assert.Assert(tt, inspect.HostConfig.MemorySwappiness == nil)
 
 				// Sysctls can be empty or contain "net.ipv4.ip_unprivileged_port_start" depending on the environment.
 				got := len(inspect.HostConfig.Sysctls)
@@ -880,4 +909,72 @@ type hostConfigValues struct {
 	PidMode      string
 	GroupAddSize int
 	Runtime      string
+}
+
+func TestContainerInspectHostConfigPrivileged(t *testing.T) {
+	testCase := nerdtest.Setup()
+
+	testCase.Setup = func(data test.Data, helpers test.Helpers) {
+		helpers.Ensure("run", "-d", "--name", data.Identifier(),
+			"--privileged",
+			testutil.AlpineImage, "sleep", nerdtest.Infinity)
+		nerdtest.EnsureContainerStarted(helpers, data.Identifier())
+	}
+
+	testCase.Cleanup = func(data test.Data, helpers test.Helpers) {
+		helpers.Anyhow("rm", "-f", data.Identifier())
+	}
+
+	testCase.Command = func(data test.Data, helpers test.Helpers) test.TestableCommand {
+		return helpers.Command("inspect", data.Identifier())
+	}
+
+	testCase.Expected = test.Expects(expect.ExitCodeSuccess, nil, func(stdout string, tt tig.T) {
+		var dc []dockercompat.Container
+
+		err := json.Unmarshal([]byte(stdout), &dc)
+		assert.NilError(tt, err)
+		assert.Equal(tt, 1, len(dc))
+
+		inspect := dc[0]
+		assert.Equal(tt, true, inspect.HostConfig.Privileged)
+	})
+
+	testCase.Run(t)
+}
+
+func TestContainerInspectHostConfigCapabilities(t *testing.T) {
+	testCase := nerdtest.Setup()
+
+	testCase.Setup = func(data test.Data, helpers test.Helpers) {
+		helpers.Ensure("run", "-d", "--name", data.Identifier(),
+			"--cap-add", "NET_ADMIN",
+			"--cap-drop", "CHOWN",
+			testutil.AlpineImage, "sleep", nerdtest.Infinity)
+		nerdtest.EnsureContainerStarted(helpers, data.Identifier())
+	}
+
+	testCase.Cleanup = func(data test.Data, helpers test.Helpers) {
+		helpers.Anyhow("rm", "-f", data.Identifier())
+	}
+
+	testCase.Command = func(data test.Data, helpers test.Helpers) test.TestableCommand {
+		return helpers.Command("inspect", data.Identifier())
+	}
+
+	testCase.Expected = test.Expects(expect.ExitCodeSuccess, nil, func(stdout string, tt tig.T) {
+		var dc []dockercompat.Container
+
+		err := json.Unmarshal([]byte(stdout), &dc)
+		assert.NilError(tt, err)
+		assert.Equal(tt, 1, len(dc))
+
+		inspect := dc[0]
+		assert.Assert(tt, slices.Contains(inspect.HostConfig.CapAdd, "CAP_NET_ADMIN"),
+			"Expected CAP_NET_ADMIN in CapAdd")
+		assert.Assert(tt, slices.Contains(inspect.HostConfig.CapDrop, "CAP_CHOWN"),
+			"Expected CAP_CHOWN in CapDrop")
+	})
+
+	testCase.Run(t)
 }
