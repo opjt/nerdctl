@@ -32,7 +32,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.7.0
 	github.com/cyphar/filepath-securejoin v0.6.1 //gomodjail:unconfined
 	github.com/distribution/reference v0.6.0
-	github.com/docker/cli v29.4.0+incompatible //gomodjail:unconfined
+	github.com/docker/cli v29.4.1+incompatible //gomodjail:unconfined
 	github.com/docker/go-connections v0.7.0
 	github.com/docker/go-units v0.5.0
 	github.com/fahedouch/go-logrotate v0.3.0 //gomodjail:unconfined
@@ -43,8 +43,8 @@ require (
 	github.com/ipfs/go-cid v0.6.1
 	github.com/klauspost/compress v1.18.5
 	github.com/mattn/go-isatty v0.0.21 //gomodjail:unconfined
-	github.com/moby/moby/client v0.4.0
-	github.com/moby/moby/v2 v2.0.0-beta.9
+	github.com/moby/moby/client v0.4.1
+	github.com/moby/moby/v2 v2.0.0-beta.11
 	github.com/moby/sys/mount v0.3.4
 	github.com/moby/sys/signal v0.7.1
 	github.com/moby/sys/user v0.4.0 //gomodjail:unconfined
@@ -129,14 +129,14 @@ require (
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.67.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.68.0 // indirect
 	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/exp v0.0.0-20250711185948-6ae5c78190dc // indirect
 	golang.org/x/mod v0.35.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260406210006-6f92a3bedf2d // indirect
 	//gomodjail:unconfined
 	google.golang.org/grpc v1.80.0 // indirect
 	//gomodjail:unconfined
@@ -149,7 +149,7 @@ require (
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/moby/moby/api v1.54.1 // indirect
+	github.com/moby/moby/api v1.54.2 // indirect
 	github.com/moby/sys/capability v0.4.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.4 // indirect
 	sigs.k8s.io/knftables v0.0.18 // indirect
