@@ -146,8 +146,11 @@ jobs:
       go-version: 1.26
       windows-cni-version: v0.3.1
       docker-version: 5:28.0.4-1~ubuntu.24.04~noble
-      windows-containerd-version: 2.3.0-beta.2
-      windows-containerd-sha: 174cd7dc3c1026c75610e87e07bc57d78c15582d05e4d932593cd46098ce06de
+      # Windows CI still requires containerd v2.2.
+      # [v2.3.0-beta.2 regression] The virtual machine or container JSON document is invalid. (Hyper-V container)
+      # https://github.com/containerd/containerd/issues/13254
+      windows-containerd-version: 2.2.3
+      windows-containerd-sha: 81314dd5e3baad958acae0e4d1ff21eb27b7c8f8809232ab06c9f397cd221e02
       linux-containerd-version: 2.3.0-beta.2
       # FIXME: containerd SHAs are not verified for authenticity (only affects tests)
       # https://github.com/containerd/nerdctl/issues/4666
